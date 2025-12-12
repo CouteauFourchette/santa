@@ -45,7 +45,36 @@ function renderOrganizerView(initialState?: SantaState): void {
     <div class="min-h-screen bg-santa-bg py-8 px-4">
       <div class="max-w-2xl mx-auto">
         <h1 class="text-4xl font-bold text-santa-cream text-center mb-2">'Tis the Season</h1>
-        <p class="text-santa-green-light text-center mb-8">Create your Secret Santa gift exchange</p>
+        <p class="text-santa-green-light text-center mb-4">Create your Secret Santa gift exchange</p>
+
+        <!-- How it works section -->
+        <details class="mb-6 bg-santa-cream/10 rounded-lg">
+          <summary class="px-4 py-3 cursor-pointer text-santa-cream hover:text-santa-gold transition-colors font-medium">
+            How it works
+          </summary>
+          <div class="px-4 pb-4 text-santa-cream/80 text-sm space-y-3">
+            <div>
+              <p class="font-semibold text-santa-cream mb-1">1. Add participants</p>
+              <p>Type names one by one, or paste a list separated by commas or new lines.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-santa-cream mb-1">2. Set constraints (optional)</p>
+              <p>Use <code class="bg-santa-bg/30 px-1 rounded">Alice !-> Bob</code> to prevent Alice from gifting Bob, or <code class="bg-santa-bg/30 px-1 rounded">Alice -> Bob</code> to require it.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-santa-cream mb-1">3. Add a note (optional)</p>
+              <p>Include budget, date, location, or other details everyone should know.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-santa-cream mb-1">4. Generate links</p>
+              <p>Each participant gets a unique link to reveal who they're gifting—no spoilers!</p>
+            </div>
+            <div>
+              <p class="font-semibold text-santa-cream mb-1">5. Save your setup</p>
+              <p>Bookmark the state URL to edit or regenerate assignments later.</p>
+            </div>
+          </div>
+        </details>
 
         <div class="bg-santa-cream rounded-lg shadow-xl p-6 mb-6">
           <!-- Participant Input Component -->
