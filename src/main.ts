@@ -17,7 +17,7 @@ let currentConstraints: Constraint[] = [];
 let currentSeed: string = '';
 let currentNotes: string = '';
 let currentTheme: string = 'classic';
-let currentSnowEnabled: boolean = true;
+let currentSnowEnabled: boolean = false;
 
 function renderOrganizerView(initialState?: SantaState): void {
   // Initialize state from initialState if provided
@@ -27,14 +27,14 @@ function renderOrganizerView(initialState?: SantaState): void {
     currentSeed = initialState.seed;
     currentNotes = initialState.notes || '';
     currentTheme = initialState.theme || 'classic';
-    currentSnowEnabled = initialState.snowEnabled ?? true;
+    currentSnowEnabled = initialState.snowEnabled ?? false;
   } else {
     currentParticipants = [];
     currentConstraints = [];
     currentSeed = '';
     currentNotes = '';
     currentTheme = 'classic';
-    currentSnowEnabled = true;
+    currentSnowEnabled = false;
   }
 
   // Apply the current theme and snow settings

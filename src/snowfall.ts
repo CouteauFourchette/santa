@@ -17,7 +17,7 @@ interface Snowflake {
 
 export function isSnowEnabled(): boolean {
   const saved = localStorage.getItem(SNOW_STORAGE_KEY);
-  return saved === null ? true : saved === 'true'; // Enabled by default
+  return saved === null ? false : saved === 'true'; // Disabled by default
 }
 
 export function setSnowEnabled(enabled: boolean): void {
