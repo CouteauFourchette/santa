@@ -39,32 +39,6 @@ function renderOrganizerView(initialState?: SantaState): void {
           <!-- Constraint Builder Component -->
           <div id="constraint-builder-container" class="mb-6"></div>
 
-          <!-- Seed Input -->
-          <div class="mb-6">
-            <label class="block text-santa-bg font-semibold mb-2" for="seed">
-              Secret Seed
-            </label>
-            <div class="flex gap-2">
-              <input
-                id="seed"
-                type="text"
-                class="flex-1 px-4 py-3 border border-santa-green/30 rounded-lg focus:ring-2 focus:ring-santa-gold focus:border-transparent bg-white text-santa-bg"
-                placeholder="Enter a memorable phrase..."
-                value="${escapeHtml(currentSeed)}"
-              />
-              <button
-                id="generate-seed"
-                type="button"
-                class="px-4 py-3 bg-santa-cream-dark text-santa-bg rounded-lg hover:bg-santa-gold-light transition-colors"
-              >
-                Random
-              </button>
-            </div>
-            <p class="text-sm text-santa-bg/60 mt-2">
-              Same seed + participants + constraints = same assignments
-            </p>
-          </div>
-
           <button
             id="generate-links"
             type="button"
@@ -122,8 +96,6 @@ function renderOrganizerView(initialState?: SantaState): void {
 
   const participantContainer = document.querySelector<HTMLDivElement>('#participant-input-container')!;
   const constraintContainer = document.querySelector<HTMLDivElement>('#constraint-builder-container')!;
-  const seedInput = document.querySelector<HTMLInputElement>('#seed')!;
-  const generateSeedBtn = document.querySelector<HTMLButtonElement>('#generate-seed')!;
   const generateLinksBtn = document.querySelector<HTMLButtonElement>('#generate-links')!;
   const errorMessage = document.querySelector<HTMLDivElement>('#error-message')!;
   const resultsDiv = document.querySelector<HTMLDivElement>('#results')!;
@@ -160,21 +132,8 @@ function renderOrganizerView(initialState?: SantaState): void {
   updateParticipantInput();
   updateConstraintBuilder();
 
-  // Seed input handlers
-  seedInput.addEventListener('input', (e) => {
-    currentSeed = (e.target as HTMLInputElement).value;
-  });
-
-  generateSeedBtn.addEventListener('click', () => {
-    currentSeed = generateRandomSeed();
-    seedInput.value = currentSeed;
-  });
-
   // Generate links handler
   generateLinksBtn.addEventListener('click', () => {
-    const seed = seedInput.value.trim();
-    currentSeed = seed;
-
     errorMessage.classList.add('hidden');
 
     if (currentParticipants.length < 2) {
@@ -183,19 +142,18 @@ function renderOrganizerView(initialState?: SantaState): void {
       return;
     }
 
-    if (!seed) {
-      errorMessage.textContent = 'Please enter a seed phrase.';
-      errorMessage.classList.remove('hidden');
-      return;
+    // Auto-generate seed if not already set (from loaded state)
+    if (!currentSeed) {
+      currentSeed = generateRandomSeed();
     }
 
     try {
-      const assignments = generateAssignments(currentParticipants, seed, currentConstraints);
+      const assignments = generateAssignments(currentParticipants, currentSeed, currentConstraints);
       const links = generateLinks(assignments, BASE_URL);
 
       // Generate and display state URL
       const state: SantaState = {
-        seed,
+        seed: currentSeed,
         participants: currentParticipants,
         constraints: currentConstraints,
       };
