@@ -80,6 +80,22 @@ export const themes: Record<string, Theme> = {
       creamDark: '#f0e0e8',
     },
   },
+  neon80s: {
+    name: 'neon80s',
+    label: 'Neon 80s',
+    colors: {
+      bg: '#0f0326',
+      bgLight: '#1a0a3e',
+      primary: '#00f0ff',
+      primaryLight: '#40f8ff',
+      accent: '#ff00ff',
+      accentLight: '#ff66ff',
+      highlight: '#ff2975',
+      highlightDark: '#cc2060',
+      cream: '#f8f0ff',
+      creamDark: '#e8d8f8',
+    },
+  },
 };
 
 const THEME_STORAGE_KEY = 'santa-theme';
