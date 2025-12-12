@@ -6,6 +6,8 @@ import { BASE_URL } from './config';
 import { renderParticipantInput } from './components/ParticipantInput';
 import { renderConstraintBuilder } from './components/ConstraintBuilder';
 import type { SantaState, Constraint } from './types';
+import { themes, getCurrentTheme, setTheme, initTheme } from './themes';
+import { isSnowEnabled, setSnowEnabled, initSnowfall } from './snowfall';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -368,6 +370,92 @@ function escapeHtml(str: string): string {
   return div.innerHTML;
 }
 
+function renderSettingsPanel(): void {
+  // Remove existing panel if any
+  const existing = document.getElementById('settings-panel-container');
+  if (existing) existing.remove();
+
+  const currentTheme = getCurrentTheme();
+  const snowEnabled = isSnowEnabled();
+
+  const container = document.createElement('div');
+  container.id = 'settings-panel-container';
+  container.innerHTML = `
+    <button
+      id="settings-toggle"
+      class="fixed bottom-4 right-4 z-50 w-12 h-12 bg-santa-cream rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center text-2xl"
+      aria-label="Settings"
+    >
+      <span class="settings-icon">&#9881;</span>
+    </button>
+    <div
+      id="settings-panel"
+      class="fixed bottom-20 right-4 z-50 bg-santa-cream rounded-lg shadow-xl p-4 w-64 hidden"
+    >
+      <h3 class="text-santa-bg font-bold mb-3">Settings</h3>
+
+      <div class="mb-4">
+        <label class="block text-santa-bg text-sm font-medium mb-2">Theme</label>
+        <select
+          id="theme-select"
+          class="w-full px-3 py-2 border border-santa-green/30 rounded-lg bg-white text-santa-bg text-sm"
+        >
+          ${Object.values(themes)
+            .map(
+              (theme) =>
+                `<option value="${theme.name}" ${theme.name === currentTheme.name ? 'selected' : ''}>${theme.label}</option>`
+            )
+            .join('')}
+        </select>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <label class="text-santa-bg text-sm font-medium">Snowfall</label>
+        <button
+          id="snow-toggle"
+          class="relative w-12 h-6 rounded-full transition-colors ${snowEnabled ? 'bg-santa-green' : 'bg-santa-bg/30'}"
+        >
+          <span
+            class="absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${snowEnabled ? 'left-7' : 'left-1'}"
+          ></span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  // Event handlers
+  const toggle = document.getElementById('settings-toggle')!;
+  const panel = document.getElementById('settings-panel')!;
+  const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
+  const snowToggle = document.getElementById('snow-toggle')!;
+
+  toggle.addEventListener('click', () => {
+    panel.classList.toggle('hidden');
+  });
+
+  // Close panel when clicking outside
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!container.contains(target)) {
+      panel.classList.add('hidden');
+    }
+  });
+
+  themeSelect.addEventListener('change', (e) => {
+    const themeName = (e.target as HTMLSelectElement).value;
+    setTheme(themeName);
+  });
+
+  snowToggle.addEventListener('click', () => {
+    const newState = !isSnowEnabled();
+    setSnowEnabled(newState);
+    // Re-render to update toggle visual
+    renderSettingsPanel();
+  });
+}
+
 // Declare GSAP types for TypeScript
 declare const gsap: {
   set: (target: unknown, vars: object) => void;
@@ -458,6 +546,10 @@ function initChristmasAnimation(): void {
 
 // Router: check URL params to determine which view to show
 function init(): void {
+  // Initialize theme and visual effects first
+  initTheme();
+  initSnowfall();
+
   const params = new URLSearchParams(window.location.search);
   const encodedData = params.get('d');
   const stateCode = params.get('state');
@@ -473,6 +565,9 @@ function init(): void {
     // Fresh organizer view
     renderOrganizerView();
   }
+
+  // Add settings panel after main view is rendered
+  renderSettingsPanel();
 }
 
 init();
