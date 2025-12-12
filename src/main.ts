@@ -297,10 +297,10 @@ function renderParticipantView(encodedData: string): void {
           <p class="text-santa-green-light text-center mb-8">Your Secret Santa assignment</p>
 
           <div class="bg-santa-cream rounded-lg shadow-xl p-8 text-center">
-            <div class="w-48 h-48 mx-auto mb-4">
+            <div class="w-48 h-48 mx-auto mb-1">
               <!-- Christmas animation based on "Merry Chris-morph!" by Chris Gannon
                    https://codepen.io/chrisgannon/pen/rNGwWdd - MIT License -->
-              <svg id="christmasSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" class="w-full h-full">
+              <svg id="christmasSVG" xmlns="http://www.w3.org/2000/svg" viewBox="150 100 500 400" class="w-full h-full">
                 <defs>
                   <filter id="glow" x="-100%" y="-100%" width="250%" height="250%">
                     <feGaussianBlur stdDeviation="12" result="coloredBlur" />
@@ -335,7 +335,7 @@ function renderParticipantView(encodedData: string): void {
             </div>
             <p class="text-santa-bg/70 mb-2">Hey <span class="font-semibold text-santa-bg">${escapeHtml(assignment.giver)}</span>!</p>
             <p class="text-xl text-santa-bg mb-4">You're giving a gift to:</p>
-            <p class="text-3xl font-bold text-santa-red">${escapeHtml(assignment.receiver)}</p>
+            <p class="text-5xl font-bold text-santa-red">${escapeHtml(assignment.receiver)}</p>
             ${notesHtml}
           </div>
         </div>
