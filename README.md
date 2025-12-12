@@ -2,6 +2,8 @@
 
 A web application for organizing Secret Santa gift exchanges. Create participant lists, set assignment constraints, and generate unique reveal links for each person.
 
+**[Try it live →](https://couteaufourchette.github.io/santa/)**
+
 | Organizer View | Participant View |
 |----------------|------------------|
 | ![Organizer](screenshot.png) | ![Participant](screenshot-participant.png) |
