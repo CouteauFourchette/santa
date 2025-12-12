@@ -13,6 +13,7 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 let currentParticipants: string[] = [];
 let currentConstraints: Constraint[] = [];
 let currentSeed: string = '';
+let currentNotes: string = '';
 
 function renderOrganizerView(initialState?: SantaState): void {
   // Initialize state from initialState if provided
@@ -20,10 +21,12 @@ function renderOrganizerView(initialState?: SantaState): void {
     currentParticipants = [...initialState.participants];
     currentConstraints = [...initialState.constraints];
     currentSeed = initialState.seed;
+    currentNotes = initialState.notes || '';
   } else {
     currentParticipants = [];
     currentConstraints = [];
     currentSeed = '';
+    currentNotes = '';
   }
 
   app.innerHTML = `
@@ -38,6 +41,22 @@ function renderOrganizerView(initialState?: SantaState): void {
 
           <!-- Constraint Builder Component -->
           <div id="constraint-builder-container" class="mb-6"></div>
+
+          <!-- Notes for Participants -->
+          <div class="mb-6">
+            <label class="block text-santa-bg font-semibold mb-2" for="notes">
+              Note for Participants <span class="font-normal text-santa-bg/60">(optional)</span>
+            </label>
+            <textarea
+              id="notes"
+              rows="3"
+              class="w-full px-4 py-3 border border-santa-green/30 rounded-lg focus:ring-2 focus:ring-santa-gold focus:border-transparent bg-white text-santa-bg resize-none"
+              placeholder="e.g., Budget: $30 max. Exchange date: Dec 24th at 7pm. Location: Mom's house."
+            >${escapeHtml(currentNotes)}</textarea>
+            <p class="text-sm text-santa-bg/60 mt-2">
+              This message will be shown to all participants on their assignment page
+            </p>
+          </div>
 
           <button
             id="generate-links"
@@ -96,6 +115,7 @@ function renderOrganizerView(initialState?: SantaState): void {
 
   const participantContainer = document.querySelector<HTMLDivElement>('#participant-input-container')!;
   const constraintContainer = document.querySelector<HTMLDivElement>('#constraint-builder-container')!;
+  const notesInput = document.querySelector<HTMLTextAreaElement>('#notes')!;
   const generateLinksBtn = document.querySelector<HTMLButtonElement>('#generate-links')!;
   const errorMessage = document.querySelector<HTMLDivElement>('#error-message')!;
   const resultsDiv = document.querySelector<HTMLDivElement>('#results')!;
@@ -132,6 +152,11 @@ function renderOrganizerView(initialState?: SantaState): void {
   updateParticipantInput();
   updateConstraintBuilder();
 
+  // Notes input handler
+  notesInput.addEventListener('input', (e) => {
+    currentNotes = (e.target as HTMLTextAreaElement).value;
+  });
+
   // Generate links handler
   generateLinksBtn.addEventListener('click', () => {
     errorMessage.classList.add('hidden');
@@ -149,13 +174,16 @@ function renderOrganizerView(initialState?: SantaState): void {
 
     try {
       const assignments = generateAssignments(currentParticipants, currentSeed, currentConstraints);
-      const links = generateLinks(assignments, BASE_URL);
+      const notes = notesInput.value.trim();
+      currentNotes = notes;
+      const links = generateLinks(assignments, BASE_URL, notes || undefined);
 
       // Generate and display state URL
       const state: SantaState = {
         seed: currentSeed,
         participants: currentParticipants,
         constraints: currentConstraints,
+        notes: notes || undefined,
       };
       const stateCode = encodeState(state);
       const stateUrl = `${BASE_URL}?state=${stateCode}`;
@@ -221,6 +249,13 @@ function renderParticipantView(encodedData: string): void {
   try {
     const assignment = revealAssignment(encodedData);
 
+    const notesHtml = assignment.notes
+      ? `<div class="mt-6 pt-6 border-t border-santa-green/20">
+           <p class="text-santa-bg/60 text-sm mb-2">From the organizer:</p>
+           <p class="text-santa-bg whitespace-pre-wrap">${escapeHtml(assignment.notes)}</p>
+         </div>`
+      : '';
+
     app.innerHTML = `
       <div class="min-h-screen bg-santa-bg py-8 px-4 flex items-center justify-center">
         <div class="max-w-md w-full">
@@ -232,6 +267,7 @@ function renderParticipantView(encodedData: string): void {
             <p class="text-santa-bg/70 mb-2">Hey <span class="font-semibold text-santa-bg">${escapeHtml(assignment.giver)}</span>!</p>
             <p class="text-xl text-santa-bg mb-4">You're giving a gift to:</p>
             <p class="text-3xl font-bold text-santa-red">${escapeHtml(assignment.receiver)}</p>
+            ${notesHtml}
           </div>
         </div>
       </div>

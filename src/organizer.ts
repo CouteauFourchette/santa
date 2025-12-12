@@ -138,10 +138,11 @@ export function generateAssignments(
  */
 export function generateLinks(
   assignments: Assignment[],
-  baseUrl: string
+  baseUrl: string,
+  notes?: string
 ): GeneratedLink[] {
   return assignments.map((assignment) => {
-    const encodedData = encodeAssignment(assignment.giver, assignment.receiver);
+    const encodedData = encodeAssignment(assignment.giver, assignment.receiver, notes);
     const url = `${baseUrl}?d=${encodedData}`;
 
     return {

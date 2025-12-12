@@ -20,4 +20,5 @@ export interface SantaState {
   seed: string;
   participants: string[];
   constraints: Constraint[];
+  notes?: string;
 }
