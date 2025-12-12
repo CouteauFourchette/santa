@@ -21,4 +21,6 @@ export interface SantaState {
   participants: string[];
   constraints: Constraint[];
   notes?: string;
+  theme?: string;
+  snowEnabled?: boolean;
 }

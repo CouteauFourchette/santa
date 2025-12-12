@@ -4,6 +4,8 @@ export interface AssignmentData {
   giver: string;
   receiver: string;
   notes?: string;
+  theme?: string;
+  snowEnabled?: boolean;
 }
 
 /**
@@ -13,12 +15,18 @@ export interface AssignmentData {
 export function encodeAssignment(
   giver: string,
   receiver: string,
-  notes?: string
+  options?: { notes?: string; theme?: string; snowEnabled?: boolean }
 ): string {
   const encoder = new TextEncoder();
   const payload: AssignmentData = { giver, receiver };
-  if (notes) {
-    payload.notes = notes;
+  if (options?.notes) {
+    payload.notes = options.notes;
+  }
+  if (options?.theme) {
+    payload.theme = options.theme;
+  }
+  if (options?.snowEnabled !== undefined) {
+    payload.snowEnabled = options.snowEnabled;
   }
   const data = encoder.encode(JSON.stringify(payload));
   return base64urlEncode(data);

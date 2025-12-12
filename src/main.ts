@@ -6,8 +6,8 @@ import { BASE_URL } from './config';
 import { renderParticipantInput } from './components/ParticipantInput';
 import { renderConstraintBuilder } from './components/ConstraintBuilder';
 import type { SantaState, Constraint } from './types';
-import { themes, getCurrentTheme, setTheme, initTheme } from './themes';
-import { isSnowEnabled, setSnowEnabled, initSnowfall } from './snowfall';
+import { themes, setTheme } from './themes';
+import { setSnowEnabled, initSnowfall } from './snowfall';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -16,6 +16,8 @@ let currentParticipants: string[] = [];
 let currentConstraints: Constraint[] = [];
 let currentSeed: string = '';
 let currentNotes: string = '';
+let currentTheme: string = 'classic';
+let currentSnowEnabled: boolean = true;
 
 function renderOrganizerView(initialState?: SantaState): void {
   // Initialize state from initialState if provided
@@ -24,12 +26,20 @@ function renderOrganizerView(initialState?: SantaState): void {
     currentConstraints = [...initialState.constraints];
     currentSeed = initialState.seed;
     currentNotes = initialState.notes || '';
+    currentTheme = initialState.theme || 'classic';
+    currentSnowEnabled = initialState.snowEnabled ?? true;
   } else {
     currentParticipants = [];
     currentConstraints = [];
     currentSeed = '';
     currentNotes = '';
+    currentTheme = 'classic';
+    currentSnowEnabled = true;
   }
+
+  // Apply the current theme and snow settings
+  setTheme(currentTheme);
+  setSnowEnabled(currentSnowEnabled);
 
   app.innerHTML = `
     <div class="min-h-screen bg-santa-bg py-8 px-4">
@@ -43,6 +53,40 @@ function renderOrganizerView(initialState?: SantaState): void {
 
           <!-- Constraint Builder Component -->
           <div id="constraint-builder-container" class="mb-6"></div>
+
+          <!-- Appearance Settings -->
+          <div class="mb-6">
+            <label class="block text-santa-bg font-semibold mb-2">Appearance</label>
+            <p class="text-sm text-santa-bg/60 mb-3">Choose the look participants will see</p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <div class="flex-1">
+                <label class="block text-santa-bg text-sm mb-1" for="theme-select">Theme</label>
+                <select
+                  id="theme-select"
+                  class="w-full px-3 py-2 border border-santa-green/30 rounded-lg bg-white text-santa-bg"
+                >
+                  ${Object.values(themes)
+                    .map(
+                      (theme) =>
+                        `<option value="${theme.name}" ${theme.name === currentTheme ? 'selected' : ''}>${theme.label}</option>`
+                    )
+                    .join('')}
+                </select>
+              </div>
+              <div class="flex items-end gap-3 pb-1">
+                <label class="text-santa-bg text-sm">Snowfall</label>
+                <button
+                  id="snow-toggle"
+                  type="button"
+                  class="relative w-12 h-6 rounded-full transition-colors ${currentSnowEnabled ? 'bg-santa-green' : 'bg-santa-bg/30'}"
+                >
+                  <span
+                    class="absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${currentSnowEnabled ? 'left-7' : 'left-1'}"
+                  ></span>
+                </button>
+              </div>
+            </div>
+          </div>
 
           <!-- Notes for Participants -->
           <div class="mb-6">
@@ -126,6 +170,8 @@ function renderOrganizerView(initialState?: SantaState): void {
   const participantContainer = document.querySelector<HTMLDivElement>('#participant-input-container')!;
   const constraintContainer = document.querySelector<HTMLDivElement>('#constraint-builder-container')!;
   const notesInput = document.querySelector<HTMLTextAreaElement>('#notes')!;
+  const themeSelect = document.querySelector<HTMLSelectElement>('#theme-select')!;
+  const snowToggle = document.querySelector<HTMLButtonElement>('#snow-toggle')!;
   const generateLinksBtn = document.querySelector<HTMLButtonElement>('#generate-links')!;
   const errorMessage = document.querySelector<HTMLDivElement>('#error-message')!;
   const resultsDiv = document.querySelector<HTMLDivElement>('#results')!;
@@ -167,6 +213,22 @@ function renderOrganizerView(initialState?: SantaState): void {
     currentNotes = (e.target as HTMLTextAreaElement).value;
   });
 
+  // Theme select handler
+  themeSelect.addEventListener('change', (e) => {
+    currentTheme = (e.target as HTMLSelectElement).value;
+    setTheme(currentTheme);
+  });
+
+  // Snow toggle handler
+  snowToggle.addEventListener('click', () => {
+    currentSnowEnabled = !currentSnowEnabled;
+    setSnowEnabled(currentSnowEnabled);
+    // Update toggle visual
+    snowToggle.className = `relative w-12 h-6 rounded-full transition-colors ${currentSnowEnabled ? 'bg-santa-green' : 'bg-santa-bg/30'}`;
+    const toggleKnob = snowToggle.querySelector('span')!;
+    toggleKnob.className = `absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${currentSnowEnabled ? 'left-7' : 'left-1'}`;
+  });
+
   // Generate links handler
   generateLinksBtn.addEventListener('click', () => {
     errorMessage.classList.add('hidden');
@@ -186,7 +248,11 @@ function renderOrganizerView(initialState?: SantaState): void {
       const assignments = generateAssignments(currentParticipants, currentSeed, currentConstraints);
       const notes = notesInput.value.trim();
       currentNotes = notes;
-      const links = generateLinks(assignments, BASE_URL, notes || undefined);
+      const links = generateLinks(assignments, BASE_URL, {
+        notes: notes || undefined,
+        theme: currentTheme,
+        snowEnabled: currentSnowEnabled,
+      });
 
       // Generate and display state URL
       const state: SantaState = {
@@ -194,6 +260,8 @@ function renderOrganizerView(initialState?: SantaState): void {
         participants: currentParticipants,
         constraints: currentConstraints,
         notes: notes || undefined,
+        theme: currentTheme,
+        snowEnabled: currentSnowEnabled,
       };
       const stateCode = encodeState(state);
       const stateUrl = `${BASE_URL}?state=${stateCode}`;
@@ -285,6 +353,14 @@ function renderParticipantView(encodedData: string): void {
   try {
     const assignment = revealAssignment(encodedData);
 
+    // Apply theme and snow settings from the assignment (set by organizer)
+    if (assignment.theme) {
+      setTheme(assignment.theme);
+    }
+    if (assignment.snowEnabled !== undefined) {
+      setSnowEnabled(assignment.snowEnabled);
+    }
+
     const notesHtml = assignment.notes
       ? `<div class="mt-6 pt-6 border-t border-santa-green/20">
            <p class="text-santa-bg/60 text-sm mb-2">From the organizer:</p>
@@ -368,92 +444,6 @@ function escapeHtml(str: string): string {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
-}
-
-function renderSettingsPanel(): void {
-  // Remove existing panel if any
-  const existing = document.getElementById('settings-panel-container');
-  if (existing) existing.remove();
-
-  const currentTheme = getCurrentTheme();
-  const snowEnabled = isSnowEnabled();
-
-  const container = document.createElement('div');
-  container.id = 'settings-panel-container';
-  container.innerHTML = `
-    <button
-      id="settings-toggle"
-      class="fixed bottom-4 right-4 z-50 w-12 h-12 bg-santa-cream rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center text-2xl"
-      aria-label="Settings"
-    >
-      <span class="settings-icon">&#9881;</span>
-    </button>
-    <div
-      id="settings-panel"
-      class="fixed bottom-20 right-4 z-50 bg-santa-cream rounded-lg shadow-xl p-4 w-64 hidden"
-    >
-      <h3 class="text-santa-bg font-bold mb-3">Settings</h3>
-
-      <div class="mb-4">
-        <label class="block text-santa-bg text-sm font-medium mb-2">Theme</label>
-        <select
-          id="theme-select"
-          class="w-full px-3 py-2 border border-santa-green/30 rounded-lg bg-white text-santa-bg text-sm"
-        >
-          ${Object.values(themes)
-            .map(
-              (theme) =>
-                `<option value="${theme.name}" ${theme.name === currentTheme.name ? 'selected' : ''}>${theme.label}</option>`
-            )
-            .join('')}
-        </select>
-      </div>
-
-      <div class="flex items-center justify-between">
-        <label class="text-santa-bg text-sm font-medium">Snowfall</label>
-        <button
-          id="snow-toggle"
-          class="relative w-12 h-6 rounded-full transition-colors ${snowEnabled ? 'bg-santa-green' : 'bg-santa-bg/30'}"
-        >
-          <span
-            class="absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${snowEnabled ? 'left-7' : 'left-1'}"
-          ></span>
-        </button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(container);
-
-  // Event handlers
-  const toggle = document.getElementById('settings-toggle')!;
-  const panel = document.getElementById('settings-panel')!;
-  const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
-  const snowToggle = document.getElementById('snow-toggle')!;
-
-  toggle.addEventListener('click', () => {
-    panel.classList.toggle('hidden');
-  });
-
-  // Close panel when clicking outside
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (!container.contains(target)) {
-      panel.classList.add('hidden');
-    }
-  });
-
-  themeSelect.addEventListener('change', (e) => {
-    const themeName = (e.target as HTMLSelectElement).value;
-    setTheme(themeName);
-  });
-
-  snowToggle.addEventListener('click', () => {
-    const newState = !isSnowEnabled();
-    setSnowEnabled(newState);
-    // Re-render to update toggle visual
-    renderSettingsPanel();
-  });
 }
 
 // Declare GSAP types for TypeScript
@@ -546,8 +536,7 @@ function initChristmasAnimation(): void {
 
 // Router: check URL params to determine which view to show
 function init(): void {
-  // Initialize theme and visual effects first
-  initTheme();
+  // Initialize snowfall (will be controlled by view functions)
   initSnowfall();
 
   const params = new URLSearchParams(window.location.search);
@@ -555,7 +544,7 @@ function init(): void {
   const stateCode = params.get('state');
 
   if (encodedData) {
-    // Participant view - show their assignment
+    // Participant view - show their assignment (theme/snow from URL)
     renderParticipantView(encodedData);
   } else if (stateCode) {
     // Organizer view with pre-loaded state
@@ -565,9 +554,6 @@ function init(): void {
     // Fresh organizer view
     renderOrganizerView();
   }
-
-  // Add settings panel after main view is rendered
-  renderSettingsPanel();
 }
 
 init();

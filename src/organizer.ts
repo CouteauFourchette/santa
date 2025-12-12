@@ -133,16 +133,26 @@ export function generateAssignments(
   );
 }
 
+export interface LinkOptions {
+  notes?: string;
+  theme?: string;
+  snowEnabled?: boolean;
+}
+
 /**
  * Generate links for all participants
  */
 export function generateLinks(
   assignments: Assignment[],
   baseUrl: string,
-  notes?: string
+  options?: LinkOptions
 ): GeneratedLink[] {
   return assignments.map((assignment) => {
-    const encodedData = encodeAssignment(assignment.giver, assignment.receiver, notes);
+    const encodedData = encodeAssignment(assignment.giver, assignment.receiver, {
+      notes: options?.notes,
+      theme: options?.theme,
+      snowEnabled: options?.snowEnabled,
+    });
     const url = `${baseUrl}?d=${encodedData}`;
 
     return {
