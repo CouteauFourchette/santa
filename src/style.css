@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-santa-bg: #1e3a3a;
+  --color-santa-bg-light: #2d4a4a;
+  --color-santa-green: #4a7c59;
+  --color-santa-green-light: #6b9b7a;
+  --color-santa-gold: #d4a855;
+  --color-santa-gold-light: #e8c778;
+  --color-santa-red: #c44536;
+  --color-santa-red-dark: #a33327;
+  --color-santa-cream: #f5f0e6;
+  --color-santa-cream-dark: #e8dfd0;
+
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-shake: shake 0.3s ease-in-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Participant tags animation */
+.participant-tag {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Constraint cards animation */
+.constraint-card {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Smooth focus transitions */
+input:focus,
+textarea:focus,
+select:focus {
+  transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.15s ease-in-out;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Remove button styling */
+.remove-participant,
+.remove-constraint {
+  transition: color 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.remove-participant:hover,
+.remove-constraint:hover {
+  transform: scale(1.1);
+}
+
+/* Select dropdown styling */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234a7c59'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Error shake animation */
+.ring-santa-red {
+  animation: shake 0.3s ease-in-out;
+}
