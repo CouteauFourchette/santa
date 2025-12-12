@@ -80,7 +80,7 @@ export function generateAssignments(
     let valid = true;
 
     // First, handle must-match constraints
-    for (const [giver, receiver] of mustMatch) {
+    for (const [, receiver] of mustMatch) {
       if (usedReceivers.has(receiver)) {
         valid = false;
         break;
