@@ -102,7 +102,15 @@ function renderOrganizerView(initialState?: SantaState): void {
 
           <!-- Generated Links Section -->
           <div class="bg-santa-cream rounded-lg shadow-xl p-6">
-            <h2 class="text-2xl font-bold text-santa-bg mb-4">Generated Links</h2>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-2xl font-bold text-santa-bg">Generated Links</h2>
+              <button
+                id="export-csv"
+                class="px-3 py-1 text-sm text-santa-green hover:text-santa-green-light transition-colors"
+              >
+                Export CSV
+              </button>
+            </div>
             <p class="text-santa-bg/70 mb-4">
               Send each person their personal link. They'll see their assignment immediately!
             </p>
@@ -228,6 +236,32 @@ function renderOrganizerView(initialState?: SantaState): void {
             button.textContent = 'Copy';
           }, 2000);
         });
+      });
+
+      // CSV export handler
+      const exportCsvBtn = document.querySelector<HTMLButtonElement>('#export-csv')!;
+      exportCsvBtn.addEventListener('click', () => {
+        const csvContent = [
+          ['Giver', 'Receiver', 'Link'].join(','),
+          ...links.map((link) => {
+            const assignment = assignments.find((a) => a.giver === link.participant)!;
+            return [
+              `"${assignment.giver.replace(/"/g, '""')}"`,
+              `"${assignment.receiver.replace(/"/g, '""')}"`,
+              `"${link.url}"`,
+            ].join(',');
+          }),
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'secret-santa-assignments.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       });
     } catch (err) {
       errorMessage.textContent = err instanceof Error ? err.message : 'An error occurred';

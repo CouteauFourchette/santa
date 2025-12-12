@@ -26,9 +26,53 @@ export function renderConstraintBuilder(
 
   container.innerHTML = `
     <div class="constraint-builder">
-      <label class="block text-santa-bg font-semibold mb-2">
-        Constraints <span class="font-normal text-santa-bg/60">(optional)</span>
-      </label>
+      <div class="flex items-center justify-between mb-2">
+        <label class="block text-santa-bg font-semibold">
+          Constraints <span class="font-normal text-santa-bg/60">(optional)</span>
+        </label>
+        ${hasEnoughParticipants ? `
+        <button
+          type="button"
+          id="paste-constraints-btn"
+          class="text-sm text-santa-green hover:text-santa-green-light transition-colors"
+        >
+          Paste list
+        </button>
+        ` : ''}
+      </div>
+
+      <!-- Paste Modal -->
+      <div id="paste-constraints-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-santa-cream rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+          <h3 class="text-lg font-bold text-santa-bg mb-2">Paste Constraints</h3>
+          <p class="text-sm text-santa-bg/60 mb-3">One per line. Format:<br/>
+            <code class="bg-white px-1 rounded">Alice !-> Bob</code> (cannot gift)<br/>
+            <code class="bg-white px-1 rounded">Alice -> Bob</code> (must gift)
+          </p>
+          <textarea
+            id="paste-constraints-textarea"
+            rows="6"
+            class="w-full px-3 py-2 border border-santa-green/30 rounded-lg focus:ring-2 focus:ring-santa-gold focus:border-transparent bg-white text-santa-bg resize-none font-mono text-sm"
+            placeholder="Alice !-> Bob&#10;Charlie -> Diana"
+          ></textarea>
+          <div class="flex gap-2 mt-4">
+            <button
+              type="button"
+              id="paste-constraints-cancel-btn"
+              class="flex-1 px-4 py-2 border border-santa-green/30 text-santa-bg rounded-lg hover:bg-santa-cream-dark transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              id="paste-constraints-confirm-btn"
+              class="flex-1 px-4 py-2 bg-santa-gold text-santa-bg font-semibold rounded-lg hover:bg-santa-gold-light transition-colors"
+            >
+              Add All
+            </button>
+          </div>
+        </div>
+      </div>
 
       ${
         hasEnoughParticipants
@@ -186,6 +230,79 @@ export function renderConstraintBuilder(
       const newConstraints = validConstraints.filter((_, i) => i !== index);
       onChange(newConstraints);
     });
+  });
+
+  // Paste modal handlers
+  const pasteBtn = container.querySelector<HTMLButtonElement>('#paste-constraints-btn');
+  const pasteModal = container.querySelector<HTMLDivElement>('#paste-constraints-modal')!;
+  const pasteTextarea = container.querySelector<HTMLTextAreaElement>('#paste-constraints-textarea')!;
+  const pasteCancelBtn = container.querySelector<HTMLButtonElement>('#paste-constraints-cancel-btn')!;
+  const pasteConfirmBtn = container.querySelector<HTMLButtonElement>('#paste-constraints-confirm-btn')!;
+
+  if (pasteBtn) {
+    pasteBtn.addEventListener('click', () => {
+      pasteTextarea.value = '';
+      pasteModal.classList.remove('hidden');
+      pasteTextarea.focus();
+    });
+  }
+
+  pasteCancelBtn.addEventListener('click', () => {
+    pasteModal.classList.add('hidden');
+  });
+
+  pasteModal.addEventListener('click', (e) => {
+    if (e.target === pasteModal) {
+      pasteModal.classList.add('hidden');
+    }
+  });
+
+  pasteConfirmBtn.addEventListener('click', () => {
+    const text = pasteTextarea.value;
+    const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+    const newConstraints: Constraint[] = [...validConstraints];
+
+    for (const line of lines) {
+      // Must-match: "Alice -> Bob" (but not "!->")
+      const mustMatch = line.match(/^(.+?)\s*->\s*(.+)$/);
+      if (mustMatch && !line.includes('!')) {
+        const from = mustMatch[1].trim();
+        const to = mustMatch[2].trim();
+        if (
+          participants.includes(from) &&
+          participants.includes(to) &&
+          from !== to &&
+          !newConstraints.some((c) => c.from === from && c.to === to && c.type === 'must')
+        ) {
+          // Check no existing must constraint for this person
+          if (!newConstraints.some((c) => c.type === 'must' && c.from === from)) {
+            newConstraints.push({ type: 'must', from, to });
+          }
+        }
+        continue;
+      }
+
+      // Exclusion: "Alice !-> Bob" or "Alice !> Bob"
+      const exclude = line.match(/^(.+?)\s*!-?>\s*(.+)$/);
+      if (exclude) {
+        const from = exclude[1].trim();
+        const to = exclude[2].trim();
+        if (
+          participants.includes(from) &&
+          participants.includes(to) &&
+          from !== to &&
+          !newConstraints.some((c) => c.from === from && c.to === to && c.type === 'exclude')
+        ) {
+          newConstraints.push({ type: 'exclude', from, to });
+        }
+        continue;
+      }
+    }
+
+    pasteModal.classList.add('hidden');
+    if (newConstraints.length !== validConstraints.length) {
+      onChange(newConstraints);
+    }
   });
 }
 
